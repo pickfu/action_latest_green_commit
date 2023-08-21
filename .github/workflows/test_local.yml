@@ -1,0 +1,36 @@
+name: 'build-test'
+on: # rebuild any PRs and main branch changes
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'releases/*'
+
+jobs:
+  build: # make sure build/ci work properly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: action_latest_commit
+      - uses: ./action_latest_commit
+        run: |
+          npm install
+      - uses: ./action_latest_commit
+        run: |
+          npm run all
+  test: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: action_latest_commit
+      - working-directory: ./action_latest_commit
+        run: |
+          npm install
+          npm run build && npm run package
+      - uses: ./action_latest_commit
+        with:
+          github_token: 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
+          repo: pickfu/phoenix
+          branch: main

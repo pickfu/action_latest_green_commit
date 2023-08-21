@@ -1,16 +1,45 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import * as github from '@actions/github'
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_STEP_DEBUG` to true
-
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    core.setOutput('time', new Date().toTimeString())
+    const octokit = github.getOctokit(core.getInput('github_token'))
+    const [owner, repo] = core.getInput('repo').split('/')
+    const branch = core.getInput('branch') || 'main'
+    const commits = await octokit.request('GET /repos/{owner}/{repo}/commits', {
+      owner,
+      repo,
+      per_page: 100
+    })
+    const shas = commits.data.map(commit => commit.sha)
+    let outputSha = ''
+    for (const sha of shas) {
+      const rest = await octokit.request(
+        'GET /repos/{owner}/{repo}/actions/runs',
+        {
+          owner,
+          repo,
+          branch,
+          head_sha: sha
+        }
+      )
+      core.info(
+        `runs length for commit ${sha}: ${rest.data.workflow_runs.length}`
+      )
+      if (rest.data.workflow_runs.length === 0) continue
+      const allPassing = rest.data.workflow_runs.every(
+        workflow_run => workflow_run.conclusion === 'success'
+      )
+      if (allPassing) {
+        outputSha = sha
+        break
+      }
+    }
+    if (outputSha) {
+      core.setOutput('commit_hash', outputSha)
+    } else {
+      core.setFailed('Could not find a recent commit with passing checks')
+    }
   } catch (error) {
     if (error instanceof Error) core.setFailed(error.message)
   }
