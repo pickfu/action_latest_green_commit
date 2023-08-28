@@ -12,6 +12,10 @@ inputs:
     required: false
     description: 'The branch to fetch the latest green commit from'
     default: 'main'
+  green:
+    required: false
+    description: 'Whether to fetch the latest green commit or only the latest one (even if it has check failures)'
+    default: 'false'
 outputs:
   commit:
     description: 'The latest green commit of the branch'

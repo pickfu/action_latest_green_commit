@@ -34,3 +34,4 @@ jobs:
           github_token: ${{ the_token }}
           repo: pickfu/phoenix
           branch: main
+          green: true
