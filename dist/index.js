@@ -48,7 +48,7 @@ function run() {
             const [owner, repo] = core.getInput('repo').split('/');
             const branch = core.getInput('branch') || 'main';
             const green = core.getInput('green') || true;
-            const commits = yield octokit.request('GET /repos/{owner}/{repo}/commits', {
+            const commits = yield octokit.request(`GET /repos/{owner}/{repo}/commits?sha=${branch}`, {
                 owner,
                 repo,
                 per_page: 100
@@ -58,7 +58,7 @@ function run() {
                 core.setOutput('commit_hash', commits.data[0].sha);
                 return;
             }
-            const shas = commits.data.map(commit => commit.sha);
+            const shas = commits.data.map((commit) => commit.sha);
             let outputSha = '';
             for (const sha of shas) {
                 const rest = yield octokit.request('GET /repos/{owner}/{repo}/actions/runs', {
