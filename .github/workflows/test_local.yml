@@ -1,6 +1,7 @@
 name: 'build-test'
 on: # rebuild any PRs and main branch changes
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -13,11 +14,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           path: action_latest_green_commit
-      - uses: ./action_latest_green_commit
-        run: |
+      - run: |
           npm install
-      - uses: ./action_latest_green_commit
-        run: |
+      - run: |
           npm run all
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
@@ -31,7 +30,7 @@ jobs:
           npm run build && npm run package
       - uses: ./action_latest_green_commit
         with:
-          github_token: ${{ the_token }}
-          repo: pickfu/phoenix
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repo: pickfu/checkout-page
           branch: main
           green: true
