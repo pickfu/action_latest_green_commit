@@ -29,7 +29,7 @@ jobs:
           npm run build && npm run package
       - uses: ./action_latest_green_commit
         with:
-          github_token: ${{ the_token }}
-          repo: pickfu/phoenix
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repo: pickfu/checkout-page
           branch: main
           green: true
