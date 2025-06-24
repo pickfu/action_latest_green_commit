@@ -33,18 +33,32 @@ async function run(): Promise<void> {
           head_sha: sha
         }
       )
+
+      // Filter to get only the latest run per workflow (like GitHub UI shows)
+      const uniqueWorkflowRuns = new Map()
+      for (const workflowRun of rest.data.workflow_runs) {
+        const workflowId = workflowRun.workflow_id
+        if (
+          !uniqueWorkflowRuns.has(workflowId) ||
+          new Date(workflowRun.created_at) >
+            new Date(uniqueWorkflowRuns.get(workflowId).created_at)
+        ) {
+          uniqueWorkflowRuns.set(workflowId, workflowRun)
+        }
+      }
+
+      const filteredRuns = Array.from(uniqueWorkflowRuns.values())
+
       core.info(
-        `runs length for commit ${sha}: ${rest.data.workflow_runs.length}`
+        `runs length for commit ${sha}: ${filteredRuns.length} (filtered from ${rest.data.workflow_runs.length})`
       )
-      core.info('runs')
-      core.info(JSON.stringify(rest.data.workflow_runs))
-      if (rest.data.workflow_runs.length === 0) continue
-      const allPassing = rest.data.workflow_runs.every(
+      if (filteredRuns.length === 0) continue
+      const allPassing = filteredRuns.every(
         workflow_run => workflow_run.conclusion === 'success'
       )
       if (allPassing) {
         core.setOutput('commit_hash', sha)
-        break
+        return
       }
     }
     core.setFailed('Could not find a recent commit with passing checks')
