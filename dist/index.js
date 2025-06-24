@@ -59,7 +59,6 @@ function run() {
                 return;
             }
             const shas = commits.data.map((commit) => commit.sha);
-            let outputSha = '';
             for (const sha of shas) {
                 const rest = yield octokit.request('GET /repos/{owner}/{repo}/actions/runs', {
                     owner,
@@ -68,20 +67,17 @@ function run() {
                     head_sha: sha
                 });
                 core.info(`runs length for commit ${sha}: ${rest.data.workflow_runs.length}`);
+                core.info("runs");
+                core.info(JSON.stringify(rest.data.workflow_runs));
                 if (rest.data.workflow_runs.length === 0)
                     continue;
                 const allPassing = rest.data.workflow_runs.every(workflow_run => workflow_run.conclusion === 'success');
                 if (allPassing) {
-                    outputSha = sha;
+                    core.setOutput('commit_hash', sha);
                     break;
                 }
             }
-            if (outputSha) {
-                core.setOutput('commit_hash', outputSha);
-            }
-            else {
-                core.setFailed('Could not find a recent commit with passing checks');
-            }
+            core.setFailed('Could not find a recent commit with passing checks');
         }
         catch (error) {
             if (error instanceof Error)

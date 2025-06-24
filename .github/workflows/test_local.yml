@@ -13,11 +13,9 @@ jobs:
       - uses: actions/checkout@v2
         with:
           path: action_latest_green_commit
-      - uses: ./action_latest_green_commit
-        run: |
+      - run: |
           npm install
-      - uses: ./action_latest_green_commit
-        run: |
+      - run: |
           npm run all
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
